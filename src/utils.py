@@ -21,21 +21,23 @@ class FAMD:
         self.k2 = dummies.shape[1]
 
 
-    def df(self): 
+    def data_concat(self): 
         """Redefinition des données à chaque fois que l'on change df_C0 et df_categ"""
         self.df = np.concatenate((self.df_C0, self.df_categ), axis=1)
         pass
 
     def ponderation(self): 
+        self.df_C0 = self.df[self.k1] # redefini df_C0 avec le df actuel
         self.sj = self.df_C0.std(axis=0).to_numpy()
         new_df_C0 = self.df_C0 / self.sj
 
+        self.df_categ = self.df[self.k2]
         self.sqrt_pj = np.sqrt(self.df_categ.sum(axis=0)/self.df_categ.shape[0]).to_numpy()
-        new_df_categ = self.df_categ / self.sqrtpj
+        new_df_categ = self.df_categ / self.sqrtpj #mise a jour de df_C0
 
-        self.df_C0 = new_df_C0
+        self.df_C0 = new_df_C0 # redefini df_categ avec le df actuel
         self.df_categ = new_df_categ / new_df_categ.sum(axis=0) ##TODO: verifier si la somme doit faire 1!!!
-        self.df()
+        self.df = self.data_concat() # mise a jour de df_categ
 
     def DM(self):
         """Function pour definir D et M à partir des valeur des données stockées en self"""
