@@ -12,6 +12,7 @@ class FAMD:
         self.n_components = n_components
         self.k1 = k1
         self.k2 = k2
+        self.df = data
         self.df_C0 = data[self.k1]
         self.df_categ = data[self.k2]
 
@@ -27,17 +28,16 @@ class FAMD:
         pass
 
     def ponderation(self): 
-        self.data_concat()
         self.df_C0 = self.df[self.k1] # redefini df_C0 avec le df actuel
         self.sj = self.df_C0.std(axis=0).to_numpy()
         new_df_C0 = self.df_C0 / self.sj
+        self.df_C0 = new_df_C0 # redefini df_categ avec le df actuel
 
         self.df_categ = self.df[self.k2]
         self.sqrt_pj = np.sqrt(self.df_categ.sum(axis=0)/self.df_categ.shape[0]).to_numpy()
         new_df_categ = self.df_categ / self.sqrt_pj #mise a jour de df_C0
-
-        self.df_C0 = new_df_C0 # redefini df_categ avec le df actuel
         self.df_categ = new_df_categ / new_df_categ.sum(axis=0) ##TODO: verifier si la somme doit faire 1!!!
+
         self.data_concat() # mise a jour de df_categ
 
     def DM(self):
@@ -54,6 +54,14 @@ class FAMD:
         self.M = self.XD_moins_sqrt.mean(axis=0)
         pass 
         
+    def step3(self): 
+        self.DM()
+        U, S, Vt = np.linalg.svd(self.XD_moins_sqrt - self.M)
+
+        #Reconstruction dans une plus petite dimension
+        Z_p = pd.DataFrame(U[:,:self.n_components]@ np.diag(S)[:self.n_components,:self.n_components] @Vt[:self.n_components,:], columns=self.df.columns, index=self.df.index)
+        return Z_p
+    
     def run_famd(self,verbose=False, preprocessed=True):
         # Step 1: Initialisation 
         if not preprocessed: 
@@ -64,10 +72,5 @@ class FAMD:
 
         #Step 3: Mise en place ACP
         # On calcule les termes D, XD^(-0.5) et M 
-        self.DM()
-        U, S, Vt = np.linalg.svd(self.XD_moins_sqrt - self.M)
-
-        #Reconstruction dans une plus petite dimension
-        Z_p = pd.DataFrame(U[:,:self.n_components]@ np.diag(S)[:self.n_components,:self.n_components] @Vt[:self.n_components,:], columns=self.df.columns, index=self.df.index)
-
+        Z_p = self.step3()
         return Z_p
