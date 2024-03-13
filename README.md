@@ -1,6 +1,6 @@
 # A principal components method to impute missing values for mixed data
 
-## Project Guidelines in Statistical Learning, M2 Mathematics and Arficial Intelligence, Paris-Saclay University. 
+## Project: Guidelines in Statistical Learning, M2 Mathematics and Artificial Intelligence, Paris-Saclay University 
 
 ### Laura Fuentes and Ambre Adjevi
 
