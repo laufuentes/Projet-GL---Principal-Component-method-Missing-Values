@@ -1,7 +1,6 @@
 import pandas as pd 
 import numpy as np
 
-
 def create_missingness(df, proba_non_missing):
     ''' Returns dataframe df with missing values
     df : panda dataframe 
