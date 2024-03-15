@@ -49,3 +49,32 @@ def encode_dummy_variables(df, cat_var_idx):
     dummy_var_idx = pd.Index(dummy_var_idx)
     
     return df_dummy, dummy_var_idx, nb_values_per_cat
+
+def generate_random(column, missing_indices_len):
+    """Generate a random number between the minimum and maximum of a given variable
+
+    Args:
+        column (pd.Series): Column values
+
+    Returns:
+       random value (int): np.random.randint(low=column.min(), high=column.max()) 
+    """
+    return np.random.randint(low=column.min(), high=column.max()+1, size=missing_indices_len)
+
+def random_imputation(df): 
+    """Perform random imputation with random values per column
+
+    Args:
+        df (pd.DataFrame): _description_
+
+    Returns:
+        df_modif (pd.DataFrame): Imputed dataset
+    """
+    df_modif = df.copy()
+    # Use the imputer to fill missing values in each column with different random values
+    for col in df.columns:
+        missing_indices = df[col].isna()
+        missing_indices_len = len(np.where(missing_indices==True)[0])
+        random_values = generate_random(df[col], missing_indices_len)
+        df_modif.loc[missing_indices, col] = random_values
+    return df_modif

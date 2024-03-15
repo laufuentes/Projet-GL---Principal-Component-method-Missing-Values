@@ -30,13 +30,13 @@ def compute_nrmse_weighted(dfpred, dftrue):
         nrmse (float): NRMSE value for each variable 
     """
     # Convert DataFrames to numpy arrays
-    df_true = dftrue.to_numpy()
-    df_pred = dfpred.to_numpy()
-    weights = df_true.sum(axis=0)
-    std_df = df_true.std(axis=0)
+    weights = dftrue.sum(axis=0)
+    std_df = dftrue.std(axis=0)
    
     # Compute NRMSE numerator
-    nrmse_numerator = np.sum(weights* ((df_true - df_pred)/std_df) ** 2)
+    nrmse_numerator = 0 
+    for c in dftrue.columns.to_numpy(): 
+        nrmse_numerator+= (((dftrue[c] - dfpred[c])/dftrue[c].std())**2).sum()
     # Compute NRMSE denominator
     nrmse_denominator = np.sum(weights)
     # Compute NRMSE

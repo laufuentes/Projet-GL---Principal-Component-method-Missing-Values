@@ -1,6 +1,6 @@
 import pandas as pd 
 import numpy as np
-from src.utils import *
+from src.utils import * 
 
 class FAMD:
     def __init__(self, data, k1, k2, n_components=2):
@@ -58,7 +58,7 @@ class FAMD:
     def DM(self):
         """Fonction to defide D and M according to values from self"""
 
-        # self.df() à laisser ? 
+        ###### self.df() à laisser ? 
         # Calcul de D_sigma
         self.D = np.diag(np.concatenate((self.sj,self.sqrt_pj)))
         D_moins_sqrt = np.sqrt(np.linalg.inv(self.D))
@@ -76,7 +76,7 @@ class FAMD:
         - Computes the SVD on self.XD_moins_sqrt - self.M
 
         Returns:
-            Z_p (pd.DataFrame): reconstructed version of (self.XD_moins_sqrt - self.M) according to self.n_compoennts 
+            Z_p (pd.DataFrame): reconstructed version of (self.XD_moins_sqrt - self.M) according to self.n_components 
         """
         self.DM()
         U, S, Vt = np.linalg.svd(self.XD_moins_sqrt - self.M)
@@ -94,7 +94,7 @@ class FAMD:
             preprocessed (bool, optional): Indicates whether the dataset has been processed or not (dummy variables created). Defaults to True.
 
         Returns:
-            _type_: _description_
+            Z_p (pd.DataFrame): reconstructed version of (self.XD_moins_sqrt - self.M) according to self.n_components 
         """
         # Step 1: Initialization 
         if not preprocessed: 
@@ -103,8 +103,8 @@ class FAMD:
         # Step 2: Weighting 
         self.ponderation_technique()
 
-        #Step 3: Mise en place ACP
-        # On calcule les termes D, XD^(-0.5) et M 
+        #Step 3: PCA Computation
+        # Compute terms D, XD^(-0.5) et M 
         Z_p = self.step3()
         return Z_p
     
@@ -128,17 +128,16 @@ class IterativeFAMDImputer(FAMD):
         """
 
         #For continuous variables
-        self.sj = self.df_C0.std(axis=0).to_numpy()
         Ximp_C0 = self.df_C0.copy()
         for c in self.df_C0.columns.to_numpy(): 
             Ximp_C0[c] = Ximp_C0[c].fillna(self.df_C0[c].mean())  
-        self.df_C0 = Ximp_C0
+        self.sj = Ximp_C0.std(axis=0).to_numpy()
+        self.df_C0 = Ximp_C0 #/self.sj
 
         # For categprical variables 
-        self.sqrt_pj = (self.df_categ.sum(axis=0)/self.df_categ.shape[0]).pow(1./2)
         Ximp_categ = self.df_categ.copy()
-        Ximp_categ =Ximp_categ.fillna((self.df_categ.sum(axis=0)/self.df_categ.shape[0]).pow(1./2))  
-        res = Ximp_categ.copy()
+        Ximp_categ =Ximp_categ.fillna((self.df_categ.sum(axis=0)/self.df_categ.shape[0]).pow(1/2))  
+        res = Ximp_categ.copy() #/ (Ximp_categ.sum(axis=0)/Ximp_categ.shape[0]).pow(1/2)
 
         pos = 0 # to get the position of the first dummy variable of one categorical variable
         for h in range(self.nb_cat):
@@ -147,6 +146,7 @@ class IterativeFAMDImputer(FAMD):
             somme = Ximp_categ[col].sum(axis=1)
             for j in range(self.df.shape[0]):
                 res.loc[j, col] = Ximp_categ[col].iloc[j]/somme[j]
+        self.sqrt_pj = (res.sum(axis=0)/self.df_categ.shape[0]).pow(1/2)
         self.df_categ = res
         self.data_concat()
         pass 
@@ -163,16 +163,16 @@ class IterativeFAMDImputer(FAMD):
 
         self.df_categ = self.df[self.k2]
         self.sqrt_pj = np.sqrt(self.df_categ.sum(axis=0)/self.df_categ.shape[0]).to_numpy()
-        res = self.df_categ.copy()
+        #res = self.df_categ.copy()
 
-        pos = 0 # to get the position of the first dummy variable of one categorical variable
-        for h in range(self.nb_cat):
-            col = [self.df_categ.columns[pos+i] for i in range (self.nb_values_per_cat[h])] 
-            pos += self.nb_values_per_cat[h]
-            somme = self.df_categ[col].sum(axis=1)
-            for j in range(self.df.shape[0]):
-                res.loc[j, col] = self.df_categ[col].iloc[j]/somme[j]
-        self.df_categ = res
+        #pos = 0 # to get the position of the first dummy variable of one categorical variable
+        #for h in range(self.nb_cat):
+            #col = [self.df_categ.columns[pos+i] for i in range (self.nb_values_per_cat[h])] 
+            #pos += self.nb_values_per_cat[h]
+            #somme = self.df_categ[col].sum(axis=1)
+            #for j in range(self.df.shape[0]):
+                #res.loc[j, col] = self.df_categ[col].iloc[j]/somme[j]
+        #self.df_categ = res
         self.data_concat() # update of the whole dataset (df)
 
         
@@ -191,7 +191,7 @@ class IterativeFAMDImputer(FAMD):
         idx_NA = 1- self.df.isna().astype(int).to_numpy() # 1 if obs 0 otherwise
 
         #Initial imputation 
-        self.inital_impute(self.df)
+        self.inital_impute()
         self.data_concat() # define the whole dataset with imputed variables (df_C0, df_categ)
 
         diff = np.inf
