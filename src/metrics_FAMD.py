@@ -15,7 +15,7 @@ def metric_fc(df_categ, true_df_categ):
     fc = np.zeros(df_categ.shape[1])
     for i,col in enumerate(df_categ.columns.to_numpy()): 
         cm = confusion_matrix(true_df_categ[col], df_categ[col])
-        fc[i] =(cm[1][0] + cm[0][1]) / cm.sum()
+        fc[i] = 1 - (np.diag(cm).sum() /cm.sum())
     return fc 
 
 

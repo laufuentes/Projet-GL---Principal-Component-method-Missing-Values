@@ -3,17 +3,20 @@ import numpy as np
 from src.utils import * 
 
 class FAMD:
-    def __init__(self, data, k1, k2, n_components=2):
+    def __init__(self, data, k1, k2, nb_values_per_cat, n_components=2):
         """Initialisation
 
         Args:
             n_components (int, optional): _description_. Defaults to 2.
-            data (_type_, optional): _description_. Defaults to None.
+            nb_cat (int): number of different categories 
+            data (_type_, optional): dataframe. Defaults to None.
         """
+        self.nb_cat = len(nb_values_per_cat)
         self.n_components = n_components
         self.k1 = k1
         self.k2 = k2
         self.df = data
+        self. J = len(k1) + len(k2) 
         self.df_C0 = data[self.k1]
         self.df_categ = data[self.k2]
 
@@ -35,7 +38,6 @@ class FAMD:
         """Weighting step specialized in the gsbs dataset: 
         This function: 
         - updates the standard deviation values (sj) for continous variables, and proportion for categorical variables (pj) according to a new imputation update. 
-        - ??? ### TEST???? reweighting of variables???
         """
 
         self.df_C0 = self.df[self.k1] # redefines df_C0 with updated df
@@ -80,7 +82,8 @@ class FAMD:
         """
         self.DM()
         U, S, Vt = np.linalg.svd(self.XD_moins_sqrt - self.M)
-        sigma2 = (1/(len(self.k1) - self.n_components))* np.array(S**2)[0:self.n_components]
+
+        sigma2 = (1/(self.J - self.nb_cat - self.n_components))* np.array(S**2)[0:self.n_components]
         s = (np.array(S**2)[0:self.n_components] - sigma2 )/ np.array(S)[0:self.n_components]
 
         #Reconstruction dans une plus petite dimension
@@ -122,7 +125,8 @@ class IterativeFAMDImputer(FAMD):
         self.nb_cat = len(nb_values_per_cat) #number of categories (not including dummies)
         self.nb_values_per_cat = nb_values_per_cat #list of the number of different values in each categories
         self.n_components = n_components
-            
+
+
     def inital_impute(self):
         """Initial imputation: 
         - continuous variables: mean/variable
