@@ -19,31 +19,31 @@ def create_dataset(n, S, K, cat, cat_idx, nb_of_cat_per_var, SNR = 1.0):
         df (pd.Dataframe) : Generated dataset
     """
 
-    #create S independant variables, drawn from a standard gaussian distribution
+    # Create S independant variables, drawn from a standard gaussian distribution
     df = np.random.normal(size = (S,n))
 
-    nb_variables = S + sum(K) #number of variables expected in the final dataset
+    nb_variables = S + sum(K) # Number of variables expected in the final dataset
     data_shape = (nb_variables,n)
 
-    #replicate each variable s (s in {1,...,S}) K_s times , to create correlated covariables:
+    # Replicate each variable s (s in {1,...,S}) K_s times , to create correlated covariables:
     for s in range(S):
         for k in range(K[s]):
             df = np.vstack((df, df[s]))
 
-    #add noise:
+    # Add noise:
     mean_noise = 0
     std_noise = 1/SNR
     gaussian_noise = np.random.normal(mean_noise, std_noise, data_shape)
     df = df + gaussian_noise
 
-    #create categorical variables :
+    # Create categorical variables :
     for i in range(cat): 
-        idx_var = cat_idx[i] #index de la ième variable categorielle
-        nb_of_cat = nb_of_cat_per_var[i] #nombre de categories différentes dans la ième variable categorielle
-        df_i = df[idx_var] #selectionne la 
+        idx_var = cat_idx[i] # Index of ith categorical variable
+        nb_of_cat = nb_of_cat_per_var[i] # Number of different categories in ith categorical variable
+        df_i = df[idx_var] 
 
-        #diviser df_i en nb_of_cat catégories différentes :
-        #la méthode de division en catégories peut différer d'un datset a l'autre
+        # Divide df_i in nb_of_cat different categories:
+        # Categories partionioning can change from one dataset to another
         indices = np.arange(n)
         np.random.shuffle(indices)
         indices_cat = np.array_split(indices, nb_of_cat)
@@ -93,13 +93,13 @@ def encode_dummy_variables(df, cat_var_idx):
 
     """
 
-    dummy_var_idx = [] #list of the dummy variables' names
+    dummy_var_idx = [] # List of the dummy variables' names
     df_dummy = df.copy()
 
-    nb_values_per_cat = [] #list of the number of different values in each categories
+    nb_values_per_cat = [] # List of the number of different values in each categories
 
     for var in cat_var_idx: 
-        var_values = df_dummy[var].dropna().unique() #get the values of the categorical variable (excluding NA)
+        var_values = df_dummy[var].dropna().unique() # Get the values of the categorical variable (excluding NA)
         nb_values_per_cat.append(len(var_values))
 
         for value in var_values :

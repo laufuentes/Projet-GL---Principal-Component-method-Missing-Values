@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix
 
 def metric_fc(df_categ, true_df_categ): 
-    """Computes the proportion of falsely classified individuals prer category.  
+    """Computes the proportion of falsely classified individuals per category.  
 
     Args:
         df_categ (pd.DataFrame): dataframe gathering only categorical variables
@@ -40,6 +40,7 @@ def compute_nrmse_weighted(dfpred, dftrue):
         weights += 1e-6
     std_df = dftrue.std(axis=0)
     weighted_squared_errors=0
+
     # Compute weighted sum of squared errors
     for column in dftrue.columns:
         weighted_squared_errors += ((((dftrue[column] - dfpred[column])/ std_df[column]) ** 2)*weights[column]).sum()
