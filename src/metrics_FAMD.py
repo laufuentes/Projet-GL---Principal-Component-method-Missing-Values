@@ -32,11 +32,12 @@ def compute_nrmse_weighted(dfpred, dftrue):
 # Compute weights for each variable based on the sum of true values
     # Convert DataFrames to numpy arrays
     weight_matrices = {}
-
     for column in dftrue.columns:
-        weight_matrices[column] = (dftrue[column] - dftrue[column].mean()) / dftrue[column].std()
+        weight_matrices[column] = 1 / np.abs(dftrue[column] - dftrue[column].mean() + 1e-6)
 
     weights = pd.DataFrame(weight_matrices, columns=dftrue.columns)
+    if weights.sum().sum()==0: 
+        weights += 1e-6
     std_df = dftrue.std(axis=0)
     weighted_squared_errors=0
     # Compute weighted sum of squared errors
@@ -44,5 +45,5 @@ def compute_nrmse_weighted(dfpred, dftrue):
         weighted_squared_errors += ((((dftrue[column] - dfpred[column])/ std_df[column]) ** 2)*weights[column]).sum()
 
     # Compute NRMSE
-    nrmse = np.sqrt(abs(weighted_squared_errors / weights.sum().sum())) 
+    nrmse = np.sqrt(weighted_squared_errors / weights.sum().sum()) 
     return nrmse
