@@ -30,7 +30,6 @@ This notebook offers a gentle introduction to computing the algorithm. It begins
 
 This notebook aims to test the properties of the regularized iterative FAMD algorithm as presented in the article. For each property, we conducted 200 simulations, creating datasets tailored to the specific property, running regularized iterative FAMD, and computing the metrics. The resulting figures can be found in 'images/synthetic'.
 
-
 > 4-Properties_real_dataset.ipynb 
 
 Similar to the previous notebook, this one evaluates some of the algorithm's properties on a real dataset (GBSG2) [2]. The resulting figures are saved in 'images/gbsg2'.
