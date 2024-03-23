@@ -39,7 +39,7 @@ Similar to the previous notebook, this one evaluates some of the algorithm's pro
 
 ##### 2.2- Package requirements
 
-To run this experiment several packages may be required. We propose to create a new conda environment taxi_advi by copy-pasting the following command on the terminal:
+To run this experiment several packages may be required. We propose to create a new conda environment ifamd by copy-pasting the following command on the terminal:
 ```
 # Create a new Conda environment
 conda create -n ifamd python=3.8
