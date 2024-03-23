@@ -1,8 +1,8 @@
 import pandas as pd 
 import numpy as np
 
-import pandas as pd 
-import numpy as np
+from src.metrics_FAMD import * 
+from src.algorithms import *
 
 
 def create_dataset(n, S, K, cat, cat_idx, nb_of_cat_per_var, SNR = 1.0):
@@ -60,6 +60,133 @@ def create_dataset(n, S, K, cat, cat_idx, nb_of_cat_per_var, SNR = 1.0):
     df.columns = df.columns.map(str)
     
     return df
+
+
+def create_rare_df(f, n, S = 1, K = [4], SNR = 5):
+    """Create dataset with rare categories, as described in section 3.3 of the paper
+
+    Args:    
+        f (float) : frequency of the rare categories
+        n (int) : sample size
+        S (int): Underlying dimension.
+        K (list of ints) : K[s] = number of times the variable s (s in {1,...,S}) is duplicated in the dataset 
+        SNR (float) : Signal to Noise Ratio
+
+    Returns: 
+        df_rare (pd.Dataframe) : Generated dataset with rare categories 
+    """
+    # Create df with continuous variables
+    df_rare = create_dataset(n, S, K, 0, [], [], SNR = SNR)
+
+    # Create the rare categorical variables, following the paper method :
+    cat = 3 #number of categorical variables
+    cat_idx = ["2","3","4"] #index of the categorical variables
+    nb_of_cat_per_var = [3,3,3] #number of categories for each categorical variable
+
+
+    # first cat variable :
+    idx_var = cat_idx[0] 
+    nb_of_cat = nb_of_cat_per_var[0]
+    df_i = df_rare[idx_var] 
+    indices = np.arange(n)
+    np.random.shuffle(indices)
+    indices_cat = np.array_split(indices, nb_of_cat)
+    for j in range(nb_of_cat):
+        for ind in indices_cat[j]:
+            df_i[ind] = j
+    df_rare[idx_var] = df_i
+
+
+    # code the two linked rare categorical variables :
+    nb_of_cat = nb_of_cat_per_var[1]
+    df_1 = df_rare[cat_idx[1]]
+    df_2 = df_rare[cat_idx[2]]
+    np.random.shuffle(indices)
+    nb_rare = int(f * n)
+    indices_rare = indices[0:nb_rare]
+    indices_non_rare = np.setdiff1d(indices, indices_rare)
+    np.random.shuffle(indices_non_rare)
+    for ind in indices_rare:
+            df_1[ind] = 0
+            df_2[ind] = 0
+
+    indices_cat1 = np.array_split(indices_non_rare, nb_of_cat-1)
+    for j in range(0,nb_of_cat-1):
+        for ind in indices_cat1[j]:
+            df_1[ind] = j+1
+    df_rare[cat_idx[1]] = df_1
+
+    np.random.shuffle(indices_non_rare)
+    indices_cat2 = np.array_split(indices_non_rare, nb_of_cat-1)
+    for j in range(0,nb_of_cat-1):
+        for ind in indices_cat2[j]:
+            df_2[ind] = j+1
+    df_rare[cat_idx[2]] = df_2
+
+    return df_rare
+
+
+
+
+def compute_metrics(df, cat_idx, n_it, n_components, proba_non_missing):
+    """ Computes the falsely classified rate and nrmse over a synthetic dataset for different probabilities of missingness.
+
+    Args:
+        df (pd.DataFrame): dataframe to impute
+        n_it (int): maximum number of iterations for iFAMD convergence
+        n_components (int): number of principal components for reconstruction 
+        proba_non_missing (list of float) : List of probabilities that a value is not missing
+
+    Returns:
+        data_missing_raw (pd.DataFrame): Masked dataframe hence containing missing values 
+    """
+    # Categorical Variables :
+    idx_k2 = pd.Index(cat_idx)
+    # Continuous Variables
+    idx_k1 = df.columns.difference(idx_k2)
+
+    dict_dfs = {}
+    for p in proba_non_missing: 
+        df_missing = create_missingness(df, p)
+        
+        # Encode dummy variables in the dataframe and in the dataframe with missing values :
+        df_missing_dummy, idx_j, nb_values_per_cat_df = encode_dummy_variables(df_missing, idx_k2)
+        df_dummy = encode_dummy_variables(df, idx_k2)[0]
+        dict_dfs.update({p:[idx_k1, idx_j, df_missing_dummy, df_dummy, nb_values_per_cat_df]})
+
+    #IFAMD
+    fc_rate = []
+    nmrse = []
+
+    for p,values in dict_dfs.items(): 
+        k1, k_j, df_missing, df_true, nb_val_per_car = values
+        C0_missing, Categ_missing = df_missing.isna()[k1].to_numpy(), df_missing.isna()[k_j].to_numpy()  
+        
+        #Computation of iterative FAMD
+        ifamd_df = IterativeFAMDImputer(n_components=n_components, data=df_missing, k1=k1, k2=k_j, nb_values_per_cat = nb_val_per_car)
+        ifamd_df.impute(n_it)
+        df = ifamd_df.df
+
+        # We encode categories into 0,1
+        res = ifamd_df.df[ifamd_df.k2].copy()
+        pos = 0
+        for h in range (len(idx_k2)) :
+            col = [idx_j[pos+i] for i in range (nb_values_per_cat_df[h])]
+            res["max_value"] = ifamd_df.df[col].max(axis = 1)
+            for value in col:
+                res[value] = (res[value] == res["max_value"]).astype(int)
+            pos += nb_values_per_cat_df[h]
+        res = res[ifamd_df.k2] 
+        #Compute metrics 
+        fc_rate.append(metric_fc(res[Categ_missing], df_true[k_j][Categ_missing]))
+
+        # For continuous variables: 
+        nmrse.append(compute_nrmse_weighted(df[k1][C0_missing], df_true[k1][C0_missing]))
+
+    fc_rate = np.array(fc_rate)
+    nmrse = np.array(nmrse)
+
+    return fc_rate, nmrse, df_missing.columns
 
 
 def create_missingness(df, proba_non_missing):
