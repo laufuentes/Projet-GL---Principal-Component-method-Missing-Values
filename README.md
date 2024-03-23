@@ -18,7 +18,7 @@ We have provided a comprehensive report summarizing the paper and have implement
 
 We offer four notebooks to facilitate understanding of the methodology and progressively assess the algorithm's properties:
 
-> 1-Generate_datasets
+> 1-Generate_datasets.ipynb
 
 This notebook demonstrates how we generated our synthetic dataset. It provides a "hello world!" example and outlines the process of creating synthetic datasets for testing the algorithm's properties.
 
@@ -27,10 +27,12 @@ This notebook demonstrates how we generated our synthetic dataset. It provides a
 This notebook offers a gentle introduction to computing the algorithm. It begins by creating a synthetic dataset, then processes the dataset by injecting missing values and encoding dummy variables. Once the dataset is prepared, it computes the regularized version of iterative FAMD. Finally, it evaluates the performance of the imputation technique by comparing the ground truth to the algorithm's outputs.
 
 > 3-Properties_synthetic_dataset.ipynb
+
 This notebook aims to test the properties of the regularized iterative FAMD algorithm as presented in the article. For each property, we conducted 200 simulations, creating datasets tailored to the specific property, running regularized iterative FAMD, and computing the metrics. The resulting figures can be found in 'images/synthetic'.
 
 
 > 4-Properties_real_dataset.ipynb 
+
 Similar to the previous notebook, this one evaluates some of the algorithm's properties on a real dataset (GBSG2) [2]. The resulting figures are saved in 'images/gbsg2'.
 
 
