@@ -14,6 +14,8 @@ When a dataset contains missing values, traditional statistical learning methods
 
 We have provided a comprehensive report summarizing the paper and have implemented the algorithms and metrics introduced in the article (\src). The primary goal of our implementation is to test the algorithm's properties presented in the article on both synthetic and real datasets [2].
 
+*Remark: The documentation guide for all functions can be found in 'src/src_doc.pdf'.*
+
 ##### 2.1- Testing the algorithm's properties with simulations
 
 We offer four notebooks to facilitate understanding of the methodology and progressively assess the algorithm's properties:
