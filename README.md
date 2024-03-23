@@ -20,7 +20,7 @@ We offer four notebooks to facilitate understanding of the methodology and progr
 
 > 1-Generate_datasets.ipynb
 
-This notebook demonstrates how we generated our synthetic dataset. It provides a "hello world!" example and outlines the process of creating synthetic datasets for testing the algorithm's properties.
+This notebook demonstrates how we generated our synthetic dataset. It provides a "hello world!" example and outlines the process of creating synthetic datasets for testing the algorithm's properties. Note that such datasets will be saved in 'datasets/'.
 
 > 2-Function_Familiarization_Guide.ipynb
 
